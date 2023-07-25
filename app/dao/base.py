@@ -1,0 +1,51 @@
+from app.database import async_session_maker
+from sqlalchemy import select, insert, delete, update
+
+
+class BaseDAO:
+
+    model = None
+
+    @classmethod
+    async def find_all(cls):
+        async with async_session_maker() as session:
+            query = select(cls.model)
+            result = await session.execute(query)
+            return result.scalars().all()
+
+    @classmethod
+    async def find_one_by_id(cls, model_id: int):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter_by(id=model_id)
+            result = await session.execute(query)
+            return result.scalar()
+
+    @classmethod
+    async def find_one(cls, **filter_by):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter_by(**filter_by)
+            result = await session.execute(query)
+            return result.scalar()
+
+    @classmethod
+    async def add(cls, data):
+        async with async_session_maker() as session:
+            query = insert(cls.model).values(data)
+            await session.execute(query)
+            await session.commit()
+
+
+    @classmethod
+    async def delete_by_model_id(cls, model_id: int):
+        async with async_session_maker() as session:
+            query = delete(cls.model).filter_by(id=model_id)
+            await session.execute(query)
+            await session.commit()
+
+    @classmethod
+    async def update(cls, model_id: int, data):
+        async with async_session_maker() as session:
+            query = update(cls.model).filter_by(id=model_id).values(data)
+            await session.execute(query)
+            await session.commit()
+
